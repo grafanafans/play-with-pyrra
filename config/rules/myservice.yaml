@@ -1,0 +1,156 @@
+groups:
+- interval: 2m30s
+  name: myservice-requests-availability-increase
+  rules:
+  - expr: sum by(code) (increase(http_request_duration_seconds_count{job="myservice"}[30d]))
+    labels:
+      job: myservice
+      owner: myteam
+      repo: myorg/myservice
+      slo: myservice-requests-availability
+    record: http_request_duration_seconds:increase30d
+  - alert: SLOMetricAbsent
+    expr: absent(http_request_duration_seconds_count{job="myservice"}) == 1
+    for: 2m
+    labels:
+      job: myservice
+      owner: myteam
+      repo: myorg/myservice
+      severity: critical
+      slo: myservice-requests-availability
+- interval: 30s
+  name: myservice-requests-availability
+  rules:
+  - expr: sum(rate(http_request_duration_seconds_count{code=~"(5..|429)",job="myservice"}[5m]))
+      / sum(rate(http_request_duration_seconds_count{job="myservice"}[5m]))
+    labels:
+      job: myservice
+      owner: myteam
+      repo: myorg/myservice
+      slo: myservice-requests-availability
+    record: http_request_duration_seconds:burnrate5m
+  - expr: sum(rate(http_request_duration_seconds_count{code=~"(5..|429)",job="myservice"}[32m]))
+      / sum(rate(http_request_duration_seconds_count{job="myservice"}[32m]))
+    labels:
+      job: myservice
+      owner: myteam
+      repo: myorg/myservice
+      slo: myservice-requests-availability
+    record: http_request_duration_seconds:burnrate32m
+  - expr: sum(rate(http_request_duration_seconds_count{code=~"(5..|429)",job="myservice"}[1h4m]))
+      / sum(rate(http_request_duration_seconds_count{job="myservice"}[1h4m]))
+    labels:
+      job: myservice
+      owner: myteam
+      repo: myorg/myservice
+      slo: myservice-requests-availability
+    record: http_request_duration_seconds:burnrate1h4m
+  - expr: sum(rate(http_request_duration_seconds_count{code=~"(5..|429)",job="myservice"}[2h9m]))
+      / sum(rate(http_request_duration_seconds_count{job="myservice"}[2h9m]))
+    labels:
+      job: myservice
+      owner: myteam
+      repo: myorg/myservice
+      slo: myservice-requests-availability
+    record: http_request_duration_seconds:burnrate2h9m
+  - expr: sum(rate(http_request_duration_seconds_count{code=~"(5..|429)",job="myservice"}[6h26m]))
+      / sum(rate(http_request_duration_seconds_count{job="myservice"}[6h26m]))
+    labels:
+      job: myservice
+      owner: myteam
+      repo: myorg/myservice
+      slo: myservice-requests-availability
+    record: http_request_duration_seconds:burnrate6h26m
+  - expr: sum(rate(http_request_duration_seconds_count{code=~"(5..|429)",job="myservice"}[1d1h43m]))
+      / sum(rate(http_request_duration_seconds_count{job="myservice"}[1d1h43m]))
+    labels:
+      job: myservice
+      owner: myteam
+      repo: myorg/myservice
+      slo: myservice-requests-availability
+    record: http_request_duration_seconds:burnrate1d1h43m
+  - expr: sum(rate(http_request_duration_seconds_count{code=~"(5..|429)",job="myservice"}[4d6h51m]))
+      / sum(rate(http_request_duration_seconds_count{job="myservice"}[4d6h51m]))
+    labels:
+      job: myservice
+      owner: myteam
+      repo: myorg/myservice
+      slo: myservice-requests-availability
+    record: http_request_duration_seconds:burnrate4d6h51m
+  - alert: ErrorBudgetBurn
+    expr: http_request_duration_seconds:burnrate5m{job="myservice",slo="myservice-requests-availability"}
+      > (14 * (1-0.9990000000000001)) and http_request_duration_seconds:burnrate1h4m{job="myservice",slo="myservice-requests-availability"}
+      > (14 * (1-0.9990000000000001))
+    for: 2m
+    labels:
+      job: myservice
+      long: 1h4m
+      owner: myteam
+      repo: myorg/myservice
+      severity: critical
+      short: 5m
+      slo: myservice-requests-availability
+  - alert: ErrorBudgetBurn
+    expr: http_request_duration_seconds:burnrate32m{job="myservice",slo="myservice-requests-availability"}
+      > (7 * (1-0.9990000000000001)) and http_request_duration_seconds:burnrate6h26m{job="myservice",slo="myservice-requests-availability"}
+      > (7 * (1-0.9990000000000001))
+    for: 16m
+    labels:
+      job: myservice
+      long: 6h26m
+      owner: myteam
+      repo: myorg/myservice
+      severity: critical
+      short: 32m
+      slo: myservice-requests-availability
+  - alert: ErrorBudgetBurn
+    expr: http_request_duration_seconds:burnrate2h9m{job="myservice",slo="myservice-requests-availability"}
+      > (2 * (1-0.9990000000000001)) and http_request_duration_seconds:burnrate1d1h43m{job="myservice",slo="myservice-requests-availability"}
+      > (2 * (1-0.9990000000000001))
+    for: 1h4m
+    labels:
+      job: myservice
+      long: 1d1h43m
+      owner: myteam
+      repo: myorg/myservice
+      severity: warning
+      short: 2h9m
+      slo: myservice-requests-availability
+  - alert: ErrorBudgetBurn
+    expr: http_request_duration_seconds:burnrate6h26m{job="myservice",slo="myservice-requests-availability"}
+      > (1 * (1-0.9990000000000001)) and http_request_duration_seconds:burnrate4d6h51m{job="myservice",slo="myservice-requests-availability"}
+      > (1 * (1-0.9990000000000001))
+    for: 3h13m
+    labels:
+      job: myservice
+      long: 4d6h51m
+      owner: myteam
+      repo: myorg/myservice
+      severity: warning
+      short: 6h26m
+      slo: myservice-requests-availability
+- interval: 30s
+  name: myservice-requests-availability-generic
+  rules:
+  - expr: "0.9990000000000001"
+    labels:
+      slo: myservice-requests-availability
+    record: pyrra_objective
+  - expr: 2592000
+    labels:
+      slo: myservice-requests-availability
+    record: pyrra_window
+  - expr: 1 - sum(http_request_duration_seconds:increase30d{code=~"(5..|429)",job="myservice"}
+      or vector(0)) / sum(http_request_duration_seconds:increase30d{job="myservice"})
+    labels:
+      slo: myservice-requests-availability
+    record: pyrra_availability
+  - expr: sum(http_request_duration_seconds_count{job="myservice"})
+    labels:
+      slo: myservice-requests-availability
+    record: pyrra_requests_total
+  - expr: sum(http_request_duration_seconds_count{code=~"(5..|429)",job="myservice"}
+      or vector(0))
+    labels:
+      slo: myservice-requests-availability
+    record: pyrra_errors_total

@@ -1,0 +1,66 @@
+version: "3"
+
+services:
+  grafana:
+    image: grafana/grafana:9.1.5
+    pull_policy: always
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_USERS_DEFAULT_THEME=light
+      - GF_LOG_MODE=console
+      - GF_LOG_LEVEL=critical
+    volumes:
+      - ./config/grafana/grafana-provisioning-dashboards.yaml:/etc/grafana/provisioning/dashboards/provisioning-dashboards.yaml:ro
+      - ./config/grafana/grafana-provisioning-datasources.yaml:/etc/grafana/provisioning/datasources/provisioning-datasources.yaml:ro
+      - ./config/grafana/detail.json:/var/lib/grafana/dashboards/detail.json:ro
+      - ./config/grafana/list.json:/var/lib/grafana/dashboards/list.json:ro
+    ports:
+      - "3000:3000"
+
+  prometheus:
+    image: prom/prometheus:v2.40.0
+    restart: always
+    ports:
+      - "9090:9090"
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=33d
+      - --web.enable-admin-api
+    volumes:
+      - ./config/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - ./config/rules:/etc/prometheus/rules
+      - prometheus:/prometheus
+
+  pyrra-api:
+    image: ghcr.io/pyrra-dev/pyrra:v0.5.2
+    restart: always
+    command:
+      - api
+      - --prometheus-url=http://prometheus:9090
+      - --prometheus-external-url=http://localhost:9090
+      - --api-url=http://pyrra-filesystem:9444
+    ports:
+      - "9099:9099"
+
+  pyrra-filesystem:
+    image: ghcr.io/pyrra-dev/pyrra:v0.5.2
+    restart: always
+    user: root
+    command:
+      - filesystem
+      - --prometheus-url=http://prometheus:9090
+      - --generic-rules=true
+    volumes:
+      - ./config/slos:/etc/pyrra
+      - ./config/rules:/etc/prometheus/pyrra
+  
+  myservice:
+    image: songjiayang/sloth-myservice:0.0.1
+    restart: always
+    ports:
+      - 8080:8080
+
+volumes:
+  prometheus:

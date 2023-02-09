@@ -1,0 +1,17 @@
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: myservice-requests-availability
+  namespace: myservice
+  labels:
+    pyrra.dev/owner: "myteam"
+    pyrra.dev/repo: "myorg/myservice"
+spec:
+  target: '99.9'
+  window: 30d
+  indicator:
+    ratio:
+      errors:
+        metric: http_request_duration_seconds_count{job="myservice",code=~"(5..|429)"}
+      total:
+        metric: http_request_duration_seconds_count{job="myservice"}
